@@ -7,24 +7,28 @@ using UnityEngine.EventSystems;
 public class DrawableRawImage : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler
 {
     public Camera drawCamera;
-    public float width;
-    public Color color;
+    public float width = 0.2f;
+    public Color color = Color.black, clearColor = Color.white;
     LineRenderer m_LineRenderer;
+    Vector2 m_PrevPos;
 
     void Start()
     {
-        RenderTexture rt = new RenderTexture(Screen.width, Screen.height, 24);
+        RectTransform rc = GetComponent<RectTransform>();
+        rc.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Screen.width );
+        rc.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical  , Screen.height);
+
+        RenderTexture rt = new RenderTexture((int)rc.rect.width, (int)rc.rect.height, 24);
         drawCamera.targetTexture = rt;
-        GetComponent<RawImage>().texture = rt;
+        RawImage ri = GetComponent<RawImage>();
+        ri.texture = rt;
 
         m_LineRenderer = gameObject.AddComponent<LineRenderer>();
         m_LineRenderer.numCapVertices = 5;
         m_LineRenderer.positionCount  = 0;
         m_LineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
-        RenderTexture.active = rt;
-        GL.Clear(true, true, Color.white);
-        RenderTexture.active = null;
+        ClearAll();
     }
 
     public void OnPointerDown(PointerEventData pd)
@@ -33,10 +37,11 @@ public class DrawableRawImage : MonoBehaviour, IDragHandler, IPointerDownHandler
         m_LineRenderer.endWidth   = width;
         m_LineRenderer.startColor = color;
         m_LineRenderer.endColor   = color;
+
+        m_PrevPos = Camera.main.ScreenToWorldPoint(pd.position);
         m_LineRenderer.positionCount = 2;
-        Vector2 tempPos = Camera.main.ScreenToWorldPoint(pd.position);
-        m_LineRenderer.SetPosition(0, tempPos);
-        m_LineRenderer.SetPosition(1, tempPos);
+        m_LineRenderer.SetPosition(0, m_PrevPos);
+        m_LineRenderer.SetPosition(1, m_PrevPos);
     }
 
     public void OnPointerUp(PointerEventData pd)
@@ -47,8 +52,16 @@ public class DrawableRawImage : MonoBehaviour, IDragHandler, IPointerDownHandler
     public void OnDrag(PointerEventData pd)
     {
         Vector2 tempPos = Camera.main.ScreenToWorldPoint(pd.position);
-        m_LineRenderer.positionCount++;
-        m_LineRenderer.SetPosition(m_LineRenderer.positionCount - 1, tempPos);
+        m_LineRenderer.SetPosition(0, m_PrevPos);
+        m_LineRenderer.SetPosition(1, tempPos);
+        m_PrevPos = tempPos;
+    }
+
+    public void ClearAll()
+    {
+        RenderTexture.active = drawCamera.targetTexture;
+        GL.Clear(true, true, clearColor);
+        RenderTexture.active = null;
     }
 
     public void SaveAsPNG()
@@ -60,7 +73,8 @@ public class DrawableRawImage : MonoBehaviour, IDragHandler, IPointerDownHandler
         t2D.Apply();
         RenderTexture.active = null;
         byte[] bytes = t2D.EncodeToPNG();
-        string fpath = Application.persistentDataPath + "/SavedImage-" + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".png";
+        string time  = System.DateTime.Now.ToString("yyyyMMddHHmmss");
+        string fpath = Application.persistentDataPath + "/SavedImage-" + time + ".png";
         System.IO.File.WriteAllBytes(fpath, bytes);
     }
 }
