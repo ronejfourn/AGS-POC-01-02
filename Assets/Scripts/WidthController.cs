@@ -13,8 +13,9 @@ public class WidthController : MonoBehaviour
     void Start()
     {
         m_LineRenderer = gameObject.AddComponent<LineRenderer>();
-        m_LineRenderer.numCapVertices = 5;
-        m_LineRenderer.positionCount  = 0;
+        m_LineRenderer.positionCount     = 0;
+        m_LineRenderer.numCapVertices    = 5;
+        m_LineRenderer.numCornerVertices = 5;
         m_LineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         m_LineRenderer.startWidth = value;
         m_LineRenderer.endWidth   = value;

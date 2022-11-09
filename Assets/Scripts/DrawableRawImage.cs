@@ -24,8 +24,9 @@ public class DrawableRawImage : MonoBehaviour, IDragHandler, IPointerDownHandler
         ri.texture = rt;
 
         m_LineRenderer = gameObject.AddComponent<LineRenderer>();
-        m_LineRenderer.numCapVertices = 5;
-        m_LineRenderer.positionCount  = 0;
+        m_LineRenderer.positionCount     = 0;
+        m_LineRenderer.numCapVertices    = 5;
+        m_LineRenderer.numCornerVertices = 5;
         m_LineRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
         ClearAll();
